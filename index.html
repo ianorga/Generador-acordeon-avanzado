@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Acordeón Avanzado</title>
+    <title>Generador de Acordeón con Doble Columna v2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,28 +37,25 @@
 
         <main class="bg-white p-6 rounded-lg shadow-lg">
 
-            <!-- INSTRUCCIONES -->
             <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-md">
                 <h2 class="font-bold mb-2">Instrucciones de formato:</h2>
                 <ol class="list-decimal list-inside space-y-1">
                     <li>El primer párrafo será la introducción.</li>
                     <li>Deja una <strong>línea en blanco</strong> para separar la introducción del primer familiar.</li>
-                    <li>Para cada familiar, la <strong>primera línea es el nombre</strong> (el título).</li>
-                    <li>Deja una <strong>línea en blanco</strong> entre cada familiar.</li>
+                    <li>Para cada familiar, la <strong>primera línea es el nombre</strong> (el título del acordeón).</li>
+                    <li>Para añadir <strong>imágenes con pie de foto</strong>, usa este formato en una nueva línea: <br><code class="bg-blue-100 p-1 rounded text-sm">URL_de_la_imagen | Texto del pie de foto</code></li>
+                    <li>Deja una <strong>línea en blanco</strong> entre cada familiar para separarlos.</li>
                 </ol>
             </div>
 
-            <!-- VENTANA DE ENTRADA -->
             <div class="mb-6">
                 <label for="inputText" class="block text-lg font-semibold mb-2 text-gray-700">1. Pega tu texto aquí:</label>
                 <textarea id="inputText" rows="15" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Pega aquí la información de la rama familiar..."></textarea>
             </div>
 
-            <!-- OPCIONES DE ESTILO -->
             <div class="mb-6">
                 <h2 class="text-lg font-semibold mb-3 text-gray-700">2. Personaliza los Estilos:</h2>
                 <div class="grid md:grid-cols-2 gap-6">
-                    <!-- Opciones para Títulos -->
                     <div class="option-group">
                         <h3 class="font-bold text-lg mb-4 text-gray-800">Títulos (Nombres)</h3>
                         <div class="space-y-4">
@@ -101,7 +98,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Opciones para Párrafos -->
                     <div class="option-group">
                         <h3 class="font-bold text-lg mb-4 text-gray-800">Párrafos (Contenido)</h3>
                         <div class="space-y-4">
@@ -124,7 +120,7 @@
                                     </optgroup>
                                 </select>
                             </div>
-                             <div class="flex items-center space-x-4">
+                               <div class="flex items-center space-x-4">
                                 <div class="flex-1">
                                     <label for="parrafoSize" class="block text-sm font-medium text-gray-600 mb-1">Tamaño (px):</label>
                                     <input type="number" id="parrafoSize" value="16" min="10" class="w-full p-2 border border-gray-300 rounded-md">
@@ -139,14 +135,15 @@
                 </div>
             </div>
 
-            <!-- BOTÓN GENERADOR -->
-            <div class="text-center my-8">
+            <div class="text-center my-8 flex justify-center gap-4">
+                <button id="clearBtn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-gray-600 active:bg-gray-700 transition-colors duration-200">
+                    Borrar Texto
+                </button>
                 <button id="generateBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 active:bg-blue-800 transform hover:scale-105 transition-transform duration-200">
                     Generar Código HTML
                 </button>
             </div>
 
-            <!-- VENTANA DE SALIDA -->
             <div>
                 <label for="outputText" class="block text-lg font-semibold mb-2 text-gray-700">3. Copia el código generado:</label>
                 <div class="relative">
@@ -168,6 +165,7 @@
         const outputText = document.getElementById('outputText');
         const generateBtn = document.getElementById('generateBtn');
         const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
 
         const tituloFont = document.getElementById('tituloFont');
         const tituloSize = document.getElementById('tituloSize');
@@ -184,55 +182,82 @@
             }
 
             const sections = rawText.trim().split(/\n\s*\n/);
-            const introduction = sections[0];
+            const introduction = sections[0].replace(/\n/g, '<br>');
             const members = sections.slice(1);
 
-            const styleBlock = `<!-- Estilos para el acordeón (personalizados) -->
-<style>
-  .familia-acordeon details {
-    border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 8px; background-color: #f9f9f9;
+            const styleBlock = `<style>
+  .familia-acordeon details { border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 8px; background-color: #f9f9f9; }
+  .familia-acordeon summary { font-weight: bold; padding: 16px; cursor: pointer; outline: none; transition: background-color 0.2s; font-family: ${tituloFont.value}; font-size: ${tituloSize.value}px; color: ${tituloColor.value}; }
+  .familia-acordeon details[open] summary { background-color: #f0f0f0; border-bottom: 1px solid #e0e0e0; }
+  .familia-acordeon .contenido { padding: 16px; }
+  .familia-acordeon .contenido p, .familia-acordeon .intro p, .familia-acordeon .texto-columna p { margin: 0; line-height: 1.6; font-family: ${parrafoFont.value}; font-size: ${parrafoSize.value}px; color: ${parrafoColor.value}; }
+  .familia-acordeon .contenido-dos-columnas { display: flex; flex-wrap: wrap; gap: 24px; padding: 16px; align-items: flex-start; }
+  .familia-acordeon .texto-columna { flex: 2; min-width: 300px; }
+  .familia-acordeon .texto-columna p { margin-bottom: 1em; }
+  .familia-acordeon .imagenes-columna { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 16px; }
+  .familia-acordeon .familia-figura { 
+    margin: 0 auto; /* Centrar la figura si su contenido es más pequeño que el 100% */
+    width: 100%;
+    text-align: center; /* Asegura el centrado del pie de foto en relación a la figura */
   }
-  .familia-acordeon summary {
-    font-weight: bold; padding: 16px; cursor: pointer; outline: none; transition: background-color 0.2s;
-    font-family: ${tituloFont.value};
-    font-size: ${tituloSize.value}px;
-    color: ${tituloColor.value};
+  .familia-acordeon .familia-imagen { 
+    max-width: 100%; /* Asegura que la imagen no se desborde */
+    height: auto; 
+    max-height: 400px; /* Un poco más flexible, ajusta si es necesario */
+    object-fit: contain; /* CAMBIO CLAVE: Redimensiona sin recortar */
+    display: block; /* Para que margin auto y text-align funcionen bien en figcaption */
+    margin: 0 auto; /* Centrar la imagen dentro de la figura si es más pequeña */
+    border-radius: 4px; 
+    border: 1px solid #ddd; 
   }
-  .familia-acordeon details[open] summary {
-    background-color: #f0f0f0; border-bottom: 1px solid #e0e0e0;
-  }
-  .familia-acordeon .contenido {
-    padding: 0 16px 16px 16px;
-  }
-  .familia-acordeon .contenido p, .familia-acordeon .intro p {
-    margin: 0;
-    line-height: 1.6;
-    font-family: ${parrafoFont.value};
-    font-size: ${parrafoSize.value}px;
-    color: ${parrafoColor.value};
+  .familia-acordeon .familia-pie-foto { 
+    font-size: 14px; 
+    color: #555; 
+    font-style: italic; 
+    text-align: center; 
+    padding-top: 6px; 
+    width: 100%; 
   }
 </style>`;
             
-            let htmlResult = `${styleBlock}
-
-<!-- Contenido del Acordeón -->
-<div class="familia-acordeon">
-  
-  <!-- Introducción -->
-  <div class="intro"><p>${introduction}</p></div>\n\n`;
+            let htmlResult = `${styleBlock}\n\n\n<div class="familia-acordeon">\n\n  \n  <div class="intro" style="padding: 0 0 16px 0;"><p>${introduction}</p></div>\n\n`;
 
             members.forEach(member => {
                 const lines = member.trim().split('\n');
                 const title = lines[0].trim();
-                const content = lines.slice(1).join(' ').trim();
+                const contentLines = [];
+                const imageObjects = [];
+                const urlRegex = /^https?:\/\/.+/i;
+
+                lines.slice(1).forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (urlRegex.test(trimmedLine)) {
+                        const parts = trimmedLine.split('|');
+                        const url = parts[0].trim();
+                        const caption = parts[1] ? parts[1].trim() : '';
+                        imageObjects.push({ url, caption });
+                    } else if (trimmedLine !== '') {
+                        contentLines.push(trimmedLine);
+                    }
+                });
                 
-                htmlResult += `  <!-- ${title} -->
-  <details>
-    <summary>${title}</summary>
-    <div class="contenido">
-      <p>${content}</p>
-    </div>
-  </details>\n\n`;
+                htmlResult += `  \n  <details>\n    <summary>${title}</summary>\n`;
+
+                if (imageObjects.length > 0) {
+                    const textContent = contentLines.map(p => `        <p>${p}</p>`).join('\n');
+                    const imageContent = imageObjects.map(img =>
+                        `        <figure class="familia-figura">\n          <img src="${img.url}" alt="Ilustración para ${title}" class="familia-imagen">\n` +
+                        (img.caption ? `          <figcaption class="familia-pie-foto">${img.caption}</figcaption>\n` : '') +
+                        `        </figure>`
+                    ).join('\n');
+                    
+                    htmlResult += `    <div class="contenido-dos-columnas">\n      <div class="texto-columna">\n${textContent}\n      </div>\n      <div class="imagenes-columna">\n${imageContent}\n      </div>\n    </div>\n`;
+                } else {
+                    const content = contentLines.join('<br><br>');
+                    htmlResult += `    <div class="contenido">\n      <p>${content}</p>\n    </div>\n`;
+                }
+
+                htmlResult += `  </details>\n\n`;
             });
 
             htmlResult += `</div>`;
@@ -249,15 +274,26 @@
                 } catch (err) { alert('No se pudo copiar el texto.'); }
             }
         });
+
+        clearBtn.addEventListener('click', () => {
+            inputText.value = '';
+            outputText.value = '';
+            inputText.focus();
+        });
         
+        // Texto de ejemplo con una sección que incluye imagen y pie de foto
         inputText.value = `El origen de la familia Añorga se remonta al siglo XVI, con Joanes de Añorga como señor de la casa solar que llevaba su nombre. El linaje principal y la herencia de la propiedad continuaron a través de los siglos, asegurando la preeminencia de la familia en la región.
 
 Joanes de Añorga
-Joanes, señor de la casa de Añorga, nació en torno a 1500, estuvo casado con Domenja de Añorga (de soltera Adúriz Miramón), hija de Christóval de Adúriz y María Esteban de Miramón Lugariz, señora del solar de Miramón.
+Joanes, señor de la casa de Añorga, nació en torno a 1500.
+Estuvo casado con Domenja de Añorga (de soltera Adúriz Miramón), hija de Christóval de Adúriz y María Esteban de Miramón Lugariz, señora del solar de Miramón.
+http://localhost/familia/wp-content/uploads/2025/09/Basililio-y-Valentina.jpg | Basilio y Valentina
+http://localhost/familia/wp-content/uploads/2025/09/Familia-en-Gentika-1937.jpg | Gernika 1937
 
 Mari Juan de Añorga Adúriz-Miramón
-Nacida en el primer tercio del siglo XVI sucedió en el señorío de la casa solar de Añorga. El 28 de enero de 1549 se firmó el contrato matrimonial entre Mari Juan de Añorga y Joanes de Berreyarza Unanue.`;
+Nacida en el primer tercio del siglo XVI sucedió en el señorío de la casa solar de Añorga. El 28 de enero de 1549 se firmó el contrato matrimonial entre Mari Juan de Añorga y Joanes de Berreyarza Unanue. Este es un texto más largo para demostrar cómo se ajusta el contenido en una sola columna cuando no hay imágenes presentes.
+http://localhost/familia/wp-content/uploads/2025/09/Begona-y-Antxon.jpg | Begoña y Antxon
+http://localhost/familia/wp-content/uploads/2025/09/Familias-Anorga-y-Sudupe.-Azkoitia-1945.jpg | Familias Añorga y Sudupe. Azkoitia 1945.`;
     </script>
 </body>
 </html>
-
